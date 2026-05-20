@@ -246,7 +246,7 @@ const Habits = {
         </div>
         <div class="card">
           <div class="card-title">
-            <span>📅 ${month} 热力图</span>
+            <span>📅 热力图</span>
           </div>
           <div id="habits-heatmap"></div>
         </div>
@@ -301,33 +301,88 @@ const Habits = {
     this.renderHeatmap(month);
   },
 
+  /* ---- 热力图 - 月份状态 ---- */
+  _heatmapMonth: null,
+  _heatmapYear: null,
+
   renderHeatmap(month) {
     const el = document.getElementById('habits-heatmap');
     if (!el) return;
-    const data = this.getHeatmapData(month);
-    const [y, m] = month.split('-').map(Number);
-    const firstDay = Utils.getMonthFirstDay(y, m);
 
-    let html = '<div class="flex gap-4 items-center mb-8">';
+    if (month) {
+      const [y, m] = month.split('-').map(Number);
+      this._heatmapYear = y;
+      this._heatmapMonth = m;
+    }
+    const year = this._heatmapYear || new Date().getFullYear();
+    const m = this._heatmapMonth || (new Date().getMonth() + 1);
+    const monthStr = `${year}-${String(m).padStart(2, '0')}`;
+    const today = Utils.today();
+
+    const data = this.getHeatmapData(monthStr);
+    const firstDay = Utils.getMonthFirstDay(year, m);
+    const daysInMonth = Utils.getMonthDays(year, m);
+
+    let html = `
+      <div class="flex justify-between items-center mb-8">
+        <div class="flex gap-4 items-center">
+          <button class="icon-btn" onclick="Habits.prevHeatmapMonth()" style="width:28px;height:28px;font-size:1rem;">‹</button>
+          <span style="font-size:0.88rem;font-weight:500;min-width:72px;text-align:center;">${year}年${m}月</span>
+          <button class="icon-btn" onclick="Habits.nextHeatmapMonth()" style="width:28px;height:28px;font-size:1rem;">›</button>
+          <button class="btn btn-sm btn-secondary" onclick="Habits.resetHeatmapMonth()" style="font-size:0.72rem;padding:3px 8px;">今天</button>
+        </div>
+      </div>
+      <div class="heatmap-wrap">
+        <div class="heatmap-grid">
+    `;
+
+    /* 星期行 */
     const weekdays = ['日', '一', '二', '三', '四', '五', '六'];
-    weekdays.forEach(w => { html += `<span style="width:14px;text-align:center;font-size:0.65rem;color:var(--text-muted)">${w}</span>`; });
-    html += '</div><div class="heatmap-grid" style="gap:3px;">';
+    weekdays.forEach(w => { html += `<div class="heatmap-weekday">${w}</div>`; });
 
+    /* 空白占位 */
     for (let i = 0; i < firstDay; i++) {
-      html += '<div style="width:14px;height:14px;"></div>';
+      html += '<div class="heatmap-cell empty"></div>';
     }
 
+    /* 日期格 */
     data.forEach(d => {
-      html += `<div class="heatmap-cell level-${d.level}" title="${d.date}: ${d.done}/${d.total}"></div>`;
+      const isToday = d.date === today;
+      const cls = `heatmap-cell level-${d.level}${isToday ? ' today' : ''}`;
+      const pct = d.total > 0 ? Math.round((d.done / d.total) * 100) : 0;
+      html += `<div class="${cls}" title="${d.date} · ${d.done}/${d.total} (${pct}%)">${d.day}</div>`;
     });
 
-    html += '</div>';
-    html += '<div class="flex gap-4 items-center mt-8 text-sm text-muted"><span>少</span>';
+    html += `
+        </div>
+      </div>
+      <div class="heatmap-legend">
+        <span>少</span>
+    `;
     for (let i = 0; i <= 4; i++) {
-      html += `<div class="heatmap-cell level-${i}" style="width:12px;height:12px;"></div>`;
+      html += `<div class="heatmap-cell level-${i}"></div>`;
     }
     html += '<span>多</span></div>';
+
     el.innerHTML = html;
+  },
+
+  prevHeatmapMonth() {
+    if (this._heatmapMonth === 1) { this._heatmapMonth = 12; this._heatmapYear--; }
+    else { this._heatmapMonth--; }
+    this.renderHeatmap();
+  },
+
+  nextHeatmapMonth() {
+    if (this._heatmapMonth === 12) { this._heatmapMonth = 1; this._heatmapYear++; }
+    else { this._heatmapMonth++; }
+    this.renderHeatmap();
+  },
+
+  resetHeatmapMonth() {
+    this._heatmapMonth = null;
+    this._heatmapYear = null;
+    this.renderHeatmap();
   },
 
   showAddHabit() {
