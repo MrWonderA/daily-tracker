@@ -154,4 +154,5 @@ const Settings = {
       });
     }
     input.value = '';
-  };
+  }
+};
