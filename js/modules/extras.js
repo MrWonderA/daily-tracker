@@ -1,76 +1,9 @@
 /* ============================================
    Extras - 扩展功能模块
-   体重记录、作息表、目标清单、密码锁
+   体重记录、作息表、目标清单
    ============================================ */
 
 const Extras = {
-  /* ==========================================
-     密码锁
-     ========================================== */
-  PWD_KEY: 'app_password',
-  _locked: false,
-  _unlocked: false,
-
-  hasPassword() {
-    return !!Store.get(this.PWD_KEY);
-  },
-
-  setPassword(pwd) {
-    Store.set(this.PWD_KEY, pwd);
-  },
-
-  removePassword() {
-    Store.remove(this.PWD_KEY);
-    this._unlocked = false;
-  },
-
-  checkPassword(input) {
-    return Store.get(this.PWD_KEY) === input;
-  },
-
-  showLockScreen() {
-    if (!this.hasPassword() || this._unlocked) return;
-
-    const overlay = document.createElement('div');
-    overlay.id = 'lock-screen';
-    overlay.style.cssText = `
-      position:fixed;inset:0;z-index:9999;
-      background:var(--bg-primary);
-      display:flex;flex-direction:column;
-      align-items:center;justify-content:center;
-      animation:fadeIn 0.3s ease;
-      padding:24px;
-    `;
-    overlay.innerHTML = `
-      <div style="font-size:3rem;margin-bottom:16px;">📋</div>
-      <h2 style="font-size:1.1rem;font-weight:600;margin-bottom:4px;">日常打卡</h2>
-      <p style="font-size:0.82rem;color:var(--text-secondary);margin-bottom:24px;">请输入密码以继续</p>
-      <input type="password" id="lock-input" class="input" style="max-width:260px;text-align:center;font-size:1.1rem;" placeholder="请输入密码" autofocus>
-      <p id="lock-error" style="color:var(--accent-red);font-size:0.82rem;margin-top:8px;display:none;">密码错误，请重试</p>
-      <button class="btn btn-primary mt-16" id="lock-submit" style="min-width:120px;">解锁</button>
-    `;
-    document.body.appendChild(overlay);
-
-    const input = document.getElementById('lock-input');
-    const submit = document.getElementById('lock-submit');
-    const err = document.getElementById('lock-error');
-
-    const tryUnlock = () => {
-      if (this.checkPassword(input.value)) {
-        this._unlocked = true;
-        overlay.remove();
-      } else {
-        err.style.display = 'block';
-        input.value = '';
-        input.focus();
-      }
-    };
-
-    submit.addEventListener('click', tryUnlock);
-    input.addEventListener('keydown', e => { if (e.key === 'Enter') tryUnlock(); });
-    input.focus();
-  },
-
   /* ==========================================
      体重记录
      ========================================== */
@@ -114,7 +47,6 @@ const Extras = {
   getSchedule() {
     const s = Store.get(this.SCHEDULE_KEY);
     if (s) return s;
-    /* 默认作息模板 */
     const defaultSched = {};
     this.defaultWeekdays.forEach((_, i) => {
       defaultSched[i] = [
@@ -173,34 +105,8 @@ const Extras = {
   },
 
   /* ==========================================
-     渲染 - 工具页面
+     体重记录页面
      ========================================== */
-  renderToolsPage(container) {
-    container.innerHTML = `
-      <div class="card-grid card-grid-2 mb-16">
-        <div class="card" style="cursor:pointer;" onclick="Extras.renderWeightPage(document.getElementById('page-container'))">
-          <div class="card-title"><span>⚖️ 体重记录</span><span class="text-muted text-sm">→</span></div>
-          <p class="text-sm text-muted">记录每日体重，查看变化趋势</p>
-        </div>
-        <div class="card" style="cursor:pointer;" onclick="Extras.renderSchedulePage(document.getElementById('page-container'))">
-          <div class="card-title"><span>📋 作息表</span><span class="text-muted text-sm">→</span></div>
-          <p class="text-sm text-muted">管理每日作息安排</p>
-        </div>
-      </div>
-      <div class="card-grid card-grid-2 mb-16">
-        <div class="card" style="cursor:pointer;" onclick="Extras.renderGoalsPage(document.getElementById('page-container'))">
-          <div class="card-title"><span>🎯 目标清单</span><span class="text-muted text-sm">→</span></div>
-          <p class="text-sm text-muted">设定长期目标，追踪完成进度</p>
-        </div>
-        <div class="card" style="cursor:pointer;" onclick="App.navigate('settings')">
-          <div class="card-title"><span>🔒 密码锁</span><span class="text-muted text-sm">→</span></div>
-          <p class="text-sm text-muted">在设置中管理应用密码</p>
-        </div>
-      </div>
-    `;
-  },
-
-  /* ---- 体重记录页面 ---- */
   renderWeightPage(container) {
     const records = this.getWeights().slice(0, 50);
     const today = Utils.today();
@@ -210,7 +116,7 @@ const Extras = {
       <div class="card page-enter mb-16">
         <div class="card-title">
           <span>⚖️ 体重记录</span>
-          <button class="btn btn-sm btn-secondary" onclick="Extras.renderToolsPage(document.getElementById('page-container'))">← 返回</button>
+          <button class="btn btn-sm btn-secondary" onclick="App.navigate('dashboard')">← 返回</button>
         </div>
         <div class="form-group">
           <label class="form-label">今日体重 (kg)</label>
@@ -269,7 +175,9 @@ const Extras = {
     this.renderWeightPage(document.getElementById('page-container'));
   },
 
-  /* ---- 作息表页面 ---- */
+  /* ==========================================
+     作息表页面
+     ========================================== */
   renderSchedulePage(container) {
     const schedule = this.getSchedule();
     const todayIdx = new Date().getDay();
@@ -278,7 +186,7 @@ const Extras = {
       <div class="card page-enter">
         <div class="card-title">
           <span>📋 作息表</span>
-          <button class="btn btn-sm btn-secondary" onclick="Extras.renderToolsPage(document.getElementById('page-container'))">← 返回</button>
+          <button class="btn btn-sm btn-secondary" onclick="App.navigate('dashboard')">← 返回</button>
           <button class="btn btn-sm btn-primary" onclick="Extras.showEditSchedule()">✏️ 编辑</button>
         </div>
         <div class="tabs" id="schedule-tabs">
@@ -309,7 +217,6 @@ const Extras = {
     }
 
     return slots.map(s => {
-      const isNow = s.time === now || (s.time < now && slots.findIndex(x => x.time === s.time) === slots.findIndex(x => x.time === now) - 1);
       return `
         <div class="list-item" style="${s.time === now ? 'background:var(--bg-hover);border-radius:8px;padding:10px 12px;' : ''}">
           <span style="font-size:1.2rem;width:32px;text-align:center;">${s.emoji || '⏰'}</span>
@@ -396,7 +303,9 @@ const Extras = {
     Extras.renderSchedulePage(document.getElementById('page-container'));
   },
 
-  /* ---- 目标清单页面 ---- */
+  /* ==========================================
+     目标清单页面
+     ========================================== */
   renderGoalsPage(container) {
     const goals = this.getGoals();
     const active = goals.filter(g => !g.done);
@@ -406,7 +315,7 @@ const Extras = {
       <div class="card page-enter mb-16">
         <div class="card-title">
           <span>🎯 目标清单</span>
-          <button class="btn btn-sm btn-secondary" onclick="Extras.renderToolsPage(document.getElementById('page-container'))">← 返回</button>
+          <button class="btn btn-sm btn-secondary" onclick="App.navigate('dashboard')">← 返回</button>
           <button class="btn btn-sm btn-primary" onclick="Extras.showAddGoal()">+ 添加</button>
         </div>
       </div>

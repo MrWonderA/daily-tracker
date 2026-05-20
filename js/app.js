@@ -12,7 +12,9 @@ const App = {
     study: { title: '学习', render: (c) => Study.renderStudyPage(c) },
     finance: { title: '记账', render: (c) => Finance.renderFinancePage(c) },
     habits: { title: '习惯', render: (c) => Habits.renderHabitsPage(c) },
-    tools: { title: '工具', render: (c) => Extras.renderToolsPage(c) },
+    weight: { title: '体重', render: (c) => Extras.renderWeightPage(c) },
+    schedule: { title: '作息', render: (c) => Extras.renderSchedulePage(c) },
+    goals: { title: '目标', render: (c) => Extras.renderGoalsPage(c) },
     settings: { title: '设置', render: (c) => Settings.render(c) }
   },
 
@@ -37,9 +39,6 @@ const App = {
 
     /* 设置菜单切换（移动端） */
     this.setupMenuToggle();
-
-    /* 密码锁 */
-    setTimeout(() => Extras.showLockScreen(), 100);
 
     /* 根据 hash 导航到对应页面 */
     const hash = location.hash.slice(1) || '/dashboard';

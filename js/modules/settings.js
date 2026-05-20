@@ -98,21 +98,6 @@ const Settings = {
         </div>
       </div>
       <div class="card mb-16">
-        <div class="card-title"><span>🔒 密码锁</span></div>
-        <div id="password-section" class="text-sm">
-          ${Extras.hasPassword() ? `
-            <p class="text-muted mb-8">✅ 已设置密码，每次打开需输入</p>
-            <div class="flex gap-8">
-              <button class="btn btn-sm btn-secondary" onclick="Settings.showSetPassword()">修改密码</button>
-              <button class="btn btn-sm btn-danger" onclick="Settings.removePassword()">取消密码</button>
-            </div>
-          ` : `
-            <p class="text-muted mb-8">未设置密码，任何人都可以打开应用</p>
-            <button class="btn btn-sm btn-primary" onclick="Settings.showSetPassword()">🔒 设置密码</button>
-          `}
-        </div>
-      </div>
-      <div class="card mb-16">
         <div class="card-title"><span>📊 数据统计</span></div>
         <div class="card-grid card-grid-4">
           <div class="stat-card"><div class="stat-value">${diaryCount}</div><div class="stat-label">📝 日记</div></div>
@@ -169,45 +154,4 @@ const Settings = {
       });
     }
     input.value = '';
-  },
-
-  showSetPassword() {
-    const container = document.getElementById('page-container');
-    const hasPwd = Extras.hasPassword();
-    container.innerHTML = `
-      <div class="card page-enter" style="max-width:400px;margin:0 auto;">
-        <div class="card-title"><span>🔒 ${hasPwd ? '修改密码' : '设置密码'}</span><button class="btn btn-sm btn-secondary" onclick="App.refresh()">← 返回</button></div>
-        <div class="form-group">
-          <label class="form-label">新密码</label>
-          <input type="password" class="input" id="pwd-new" placeholder="输入新密码" autofocus>
-        </div>
-        <div class="form-group">
-          <label class="form-label">确认密码</label>
-          <input type="password" class="input" id="pwd-confirm" placeholder="再次输入密码">
-        </div>
-        <p id="pwd-error" style="color:var(--accent-red);font-size:0.82rem;display:none;">两次密码不一致</p>
-        <button class="btn btn-primary" onclick="Settings.savePassword()">💾 保存</button>
-      </div>
-    `;
-  },
-
-  savePassword() {
-    const pwd = document.getElementById('pwd-new')?.value;
-    const confirm = document.getElementById('pwd-confirm')?.value;
-    if (!pwd || pwd.length < 1) { alert('请输入密码'); return; }
-    if (pwd !== confirm) {
-      document.getElementById('pwd-error').style.display = 'block';
-      return;
-    }
-    Extras.setPassword(pwd);
-    alert('密码设置成功');
-    App.refresh();
-  },
-
-  async removePassword() {
-    if (await Utils.confirm('确定取消密码保护？')) {
-      Extras.removePassword();
-      App.refresh();
-    }
-  }
-};
+  };
